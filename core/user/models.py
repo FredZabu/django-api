@@ -6,7 +6,9 @@ from django.http import Http404
 # Create your models here.
 
 class UserManager(BaseUserManager):
+    
     def get_object_by_public_id(self, public_id):
+        """This function returns the user based on the user's public id"""
         try:
             instance = self.get(public_id=public_id)
             return instance
@@ -14,6 +16,7 @@ class UserManager(BaseUserManager):
             return Http404
     
     def create_user(self, username, email, password=None, **kwargs):
+        """create and return a `User` with an email, phone number, username and password."""
         if username is None:
             raise TypeError("User must have username")
         if email is None:
@@ -25,6 +28,23 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using = self._db)
         return user
+    
+    def create_superuser(self, username, email, password, **kwargs):
+        """Create and return a `User` with superuser (admin)
+           permissions."""
+        if username is None:
+            raise TypeError("Superuser must have username")
+        if email is None:
+            raise TypeError("Superuser must have email")
+        if password is None:
+            raise TypeError("Superuser must have password")
+        
+        user = self.create_user(username, email, password,**kwargs)
+        user.is_superuser = True
+        user.is_staff = True
+        user.save(using=self._db)
+        
+        return user    
     
 class User(AbstractBaseUser, PermissionsMixin):
     public_id = models.UUIDField(db_index=True, unique=True, default= uuid.uuid4, editable=False)
